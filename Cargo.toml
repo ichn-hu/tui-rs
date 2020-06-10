@@ -35,7 +35,7 @@ serde = { version = "1", "optional" = true, features = ["derive"]}
 
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
-xterm-js-sys = { path = "/media/data/Documents/Development/Personal/Rust/web-tui/xterm-js-sys", version = "4.6.0-alpha0", features = ["tui-backend"] }
+xterm-js-sys = { version = "4.6.0-alpha0", features = ["tui-backend"] }
 
 
 [dev-dependencies]
@@ -131,3 +131,8 @@ required-features = ["crossterm"]
 name = "curses_demo"
 path = "examples/curses_demo.rs"
 required-features = ["curses"]
+
+[patch.crates-io]
+wasm-bindgen = { git = "https://github.com/rrbutani/wasm-bindgen.git", branch = "patches" } # TODO: switch back once things get merged!
+crossterm = { git = "https://github.com/rrbutani/crossterm.git", branch = "xtermjs" } # TODO: switch back once things get merged!
+xterm-js-sys = { git = "https://github.com/rrbutani/xterm-js-sys.git" } # TODO: remove!
