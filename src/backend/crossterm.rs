@@ -17,33 +17,68 @@ use crate::backend::Backend;
 use crate::style::{Color, Modifier};
 use crate::{buffer::Cell, layout::Rect, style};
 
-pub struct CrosstermBackend<W: Write> {
+
+#[cfg(target_arch = "wasm32")]
+use xterm_js_sys::{xterm::Terminal, crossterm_support::XtermJsCrosstermBackend};
+use core::marker::PhantomData;
+
+#[cfg(not(target_arch = "wasm32"))]
+pub struct CrosstermBackend<'a, W: Write> {
     buffer: W,
+    _a: PhantomData<&'a ()>,
 }
 
-impl<W> CrosstermBackend<W>
+#[cfg(target_arch = "wasm32")]
+pub struct CrosstermBackend<'a, W: Write = Vec<u8>> {
+    buffer: XtermJsCrosstermBackend<'a>,
+    _w: PhantomData<W>,
+}
+
+impl<'a, W> CrosstermBackend<'a, W>
 where
     W: Write,
 {
-    pub fn new(buffer: W) -> CrosstermBackend<W> {
-        CrosstermBackend { buffer }
+    #[cfg(not(target_arch = "wasm32"))]
+    pub fn new(buffer: W) -> Self {
+        Self { buffer, _a: PhantomData }
+    }
+
+    #[cfg(target_arch = "wasm32")]
+    pub fn new(terminal: &'a Terminal) -> CrosstermBackend<'a, W> {
+        Self { buffer: terminal.into(), _w: PhantomData }
     }
 }
 
-impl<W> Write for CrosstermBackend<W>
+impl<'a, W> Write for CrosstermBackend<'a, W>
 where
     W: Write,
 {
+    // #[cfg(not(target_arch = "wasm32"))]
     fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
         self.buffer.write(buf)
     }
 
+    // #[cfg(not(target_arch = "wasm32"))]
     fn flush(&mut self) -> io::Result<()> {
         self.buffer.flush()
     }
+
+    // #[cfg(target_arch = "wasm32")]
+    // fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
+    //     self.buffer.write(buf)
+    // }
+
+    // #[cfg(target_arch = "wasm32")]
+    // fn flush(&mut self) -> io::Result<()> {
+    //     self.buffer.flush()
+    // }
 }
 
-impl<W> Backend for CrosstermBackend<W>
+// #[cfg(target_arch = "wasm32")]
+// impl<'a, W: Write> Write for CrosstermBackend<'a, W> {
+// }
+
+impl<'t, W> Backend for CrosstermBackend<'t, W>
 where
     W: Write,
 {
@@ -109,8 +144,14 @@ where
     }
 
     fn get_cursor(&mut self) -> io::Result<(u16, u16)> {
-        crossterm::cursor::position()
-            .map_err(|e| io::Error::new(io::ErrorKind::Other, e.to_string()))
+        #[cfg(not(target_arch = "wasm32"))]
+        let res = crossterm::cursor::position()
+            .map_err(|e| io::Error::new(io::ErrorKind::Other, e.to_string()));
+
+        #[cfg(target_arch = "wasm32")]
+        let res = crossterm::cursor::position(&self.buffer.terminal)
+            .map_err(|e| io::Error::new(io::ErrorKind::Other, e.to_string()));
+        res
     }
 
     fn set_cursor(&mut self, x: u16, y: u16) -> io::Result<()> {
@@ -122,8 +163,13 @@ where
     }
 
     fn size(&self) -> io::Result<Rect> {
+        #[cfg(not(target_arch = "wasm32"))]
         let (width, height) =
             terminal::size().map_err(|e| io::Error::new(io::ErrorKind::Other, e.to_string()))?;
+
+        #[cfg(target_arch = "wasm32")]
+        let (width, height) =
+            terminal::size(self.buffer.terminal).map_err(|e| io::Error::new(io::ErrorKind::Other, e.to_string()))?;
 
         Ok(Rect::new(0, 0, width, height))
     }
@@ -169,7 +215,7 @@ struct ModifierDiff {
     pub to: Modifier,
 }
 
-#[cfg(unix)]
+#[cfg(any(unix, target_arch = "wasm32"))]
 impl ModifierDiff {
     fn queue<W>(&self, mut w: W) -> io::Result<()>
     where

@@ -33,6 +33,11 @@ easycurses = { version = "0.12.2", optional = true }
 pancurses = { version = "0.16.1", optional = true, features = ["win32a"] }
 serde = { version = "1", "optional" = true, features = ["derive"]}
 
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+xterm-js-sys = { path = "/media/data/Documents/Development/Personal/Rust/web-tui/xterm-js-sys", version = "4.6.0-alpha0", features = ["tui-backend"] }
+
+
 [dev-dependencies]
 rand = "0.7"
 argh = "0.1"
