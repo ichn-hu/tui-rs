@@ -25,8 +25,12 @@ cassowary = "0.3"
 unicode-segmentation = "1.2"
 unicode-width = "0.1"
 termion = { version = "1.5", optional = true }
-crossterm = { version = "0.22", optional = true }
+crossterm = { version = "0.19.0", optional = true }
 serde = { version = "1", optional = true, features = ["derive"]}
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+xterm-js-sys = { version = "4.6.0-alpha1", features = ["crossterm-support"] }
+
 
 [dev-dependencies]
 rand = "0.8"
@@ -87,3 +91,8 @@ required-features = ["crossterm"]
 [[example]]
 name = "user_input"
 required-features = ["crossterm"]
+
+[patch.crates-io]
+wasm-bindgen = { git = "https://github.com/rrbutani/wasm-bindgen.git", branch = "patches" } # TODO: switch back once things get merged!
+crossterm = { git = "https://github.com/rrbutani/crossterm.git", branch = "xtermjs" } # TODO: switch back once things get merged!
+xterm-js-sys = { git = "https://github.com/rrbutani/xterm-js-sys.git" } # TODO: remove!
