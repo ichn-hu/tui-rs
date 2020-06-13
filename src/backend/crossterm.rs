@@ -7,11 +7,13 @@ use crossterm::{
     cursor::{Hide, MoveTo, Show},
     execute, queue,
     style::{
-        Attribute as CAttribute, Color as CColor, Print, SetAttribute, SetBackgroundColor,
+        Attribute as CAttribute, Color as CColor, SetAttribute, SetBackgroundColor,
         SetForegroundColor,
     },
     terminal::{self, Clear, ClearType},
 };
+#[cfg(not(target_arch = "wasm32"))]
+use crossterm::style::Print;
 
 use crate::backend::Backend;
 use crate::style::{Color, Modifier};
@@ -53,14 +55,8 @@ impl<'a, W> Write for CrosstermBackend<'a, W>
 where
     W: Write,
 {
-    #[cfg(not(target_arch = "wasm32"))]
     fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
         self.buffer.write(buf)
-    }
-
-    #[cfg(target_arch = "wasm32")]
-    fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
-        self.buffer.write_immediately(buf)
     }
 
     fn flush(&mut self) -> io::Result<()> {
@@ -116,13 +112,22 @@ where
             inst += 1;
         }
 
-        map_error(queue!(
+        #[cfg(not(target_arch = "wasm32"))]
+        let res = queue!(self.buffer, Print(string));
+
+        #[cfg(target_arch = "wasm32")]
+        let res = self.buffer
+            .write_immediately(string)
+            .map_err(crossterm::ErrorKind::IoError);
+
+        let res = res.and_then(|()| queue!(
             self.buffer,
-            Print(string),
             SetForegroundColor(CColor::Reset),
             SetBackgroundColor(CColor::Reset),
-            SetAttribute(CAttribute::Reset)
-        ))
+            SetAttribute(CAttribute::Reset),
+        ));
+
+        map_error(res)
     }
 
     fn hide_cursor(&mut self) -> io::Result<()> {
