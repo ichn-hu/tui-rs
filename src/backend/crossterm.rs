@@ -53,8 +53,14 @@ impl<'a, W> Write for CrosstermBackend<'a, W>
 where
     W: Write,
 {
+    #[cfg(not(target_arch = "wasm32"))]
     fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
         self.buffer.write(buf)
+    }
+
+    #[cfg(target_arch = "wasm32")]
+    fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
+        self.buffer.write_immediately(buf)
     }
 
     fn flush(&mut self) -> io::Result<()> {
