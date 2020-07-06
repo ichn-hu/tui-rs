@@ -32,7 +32,7 @@ pub struct CrosstermBackend<'a, W: Write> {
 
 #[cfg(target_arch = "wasm32")]
 pub struct CrosstermBackend<'a, W: Write = Vec<u8>> {
-    buffer: XtermJsCrosstermBackend<'a>,
+    pub buffer: XtermJsCrosstermBackend<'a>,
     _w: PhantomData<W>,
 }
 
