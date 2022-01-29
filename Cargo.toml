@@ -93,6 +93,6 @@ name = "user_input"
 required-features = ["crossterm"]
 
 [patch.crates-io]
-wasm-bindgen = { git = "https://github.com/rrbutani/wasm-bindgen.git", branch = "patches" } # TODO: switch back once things get merged!
-crossterm = { git = "https://github.com/rrbutani/crossterm.git", branch = "xtermjs" } # TODO: switch back once things get merged!
-xterm-js-sys = { git = "https://github.com/rrbutani/xterm-js-sys.git" } # TODO: remove!
+wasm-bindgen = { git = "https://github.com/ichn-hu/wasm-bindgen.git", branch = "patches" } # TODO: switch back once things get merged!
+crossterm = { git = "https://github.com/ichn-hu/crossterm.git", branch = "xtermjs" } # TODO: switch back once things get merged!
+xterm-js-sys = { git = "https://github.com/ichn-hu/xterm-js-sys.git" } # TODO: remove!

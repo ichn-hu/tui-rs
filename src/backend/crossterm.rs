@@ -108,25 +108,23 @@ where
             map_error(queue!(self.buffer, Print(&cell.symbol)))?;
         }
 
-        #[cfg(not(target_arch = "wasm32"))]
-        let res = queue!(self.buffer, Print(string));
+        // refer to https://github.com/fdehau/tui-rs/issues/373 for the reason of commenting out, might need to revert back
+        //
+        // #[cfg(not(target_arch = "wasm32"))]
+        // let res = queue!(self.buffer, Print(string));
 
-        #[cfg(target_arch = "wasm32")]
-        let res = self
-            .buffer
-            .write_immediately(string)
-            .map_err(crossterm::ErrorKind::IoError);
+        // #[cfg(target_arch = "wasm32")]
+        // let res = self
+        //     .buffer
+        //     .write_immediately(string)
+        //     .map_err(crossterm::ErrorKind::IoError);
 
-        let res = res.and_then(|()| {
-            queue!(
-                self.buffer,
-                SetForegroundColor(CColor::Reset),
-                SetBackgroundColor(CColor::Reset),
-                SetAttribute(CAttribute::Reset),
-            )
-        });
-
-        map_error(res)
+        map_error(queue!(
+            self.buffer,
+            SetForegroundColor(CColor::Reset),
+            SetBackgroundColor(CColor::Reset),
+            SetAttribute(CAttribute::Reset)
+        ))
     }
 
     fn hide_cursor(&mut self) -> io::Result<()> {
