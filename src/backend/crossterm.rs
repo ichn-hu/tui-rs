@@ -105,7 +105,11 @@ where
                 bg = cell.bg;
             }
 
+            #[cfg(not(target_arch = "wasm32"))]
             map_error(queue!(self.buffer, Print(&cell.symbol)))?;
+
+            #[cfg(target_arch = "wasm32")]
+            self.buffer.write_immediately(cell.symbol.clone())?;
         }
 
         // refer to https://github.com/fdehau/tui-rs/issues/373 for the reason of commenting out, might need to revert back
